@@ -1,10 +1,16 @@
 import React, { useState } from "react";
 import LocationsDropdown from "./LocationsDropdown";
-import { Datepicker } from "flowbite-react";
+import DatePickerMUI from "./DatePickerMUI";
+import { Button } from "flowbite-react";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const HomePage = () => {
   const [fromLocation, setFromLocation] = useState(null);
   const [toLocation, setToLocation] = useState(null);
+  const [selectedDate, setSelectedDate] = useState(null); // New state for selected date
+
+  const navigate = useNavigate();
 
   const handleFromLocationSelect = (location) => {
     setFromLocation(location);
@@ -14,8 +20,24 @@ const HomePage = () => {
     setToLocation(location);
   };
 
-  const DatePickerTheme = {
-    base: "relative border-0",
+  const handleDateChange = (date) => {
+    setSelectedDate(date);
+  };
+
+  const handleSearch = async () => {
+    try {
+      const response = await axios.get(
+        `http://localhost:5001/bus-bookings?from=${fromLocation}&to=${toLocation}&date=${selectedDate}`
+      );
+      if (response.data.length === 0) {
+        alert("No bus bookings found");
+        return;
+      } else {
+        navigate("/seat-booking", { state: { busBookings: response.data } });
+      }
+    } catch (error) {
+      console.error("Error fetching bus bookings:", error);
+    }
   };
 
   return (
@@ -27,10 +49,10 @@ const HomePage = () => {
           className="w-full h-96 object-cover object-center rounded-lg shadow-md"
         />
       </div>
-      <div className="absolute left-0 z-10 w-full px-[20%]">
+      <div className="absolute left-0 z-10 w-full lg:px-[20%]">
         <div className="bg-slate-200 rounded-2xl p-3 -mt-7 border-4 border-amber-200">
-          <div className="flex justify-between items-center">
-            <div className="flex-grow flex justify-center items-center w-[20%]">
+          <div className="flex justify-between items-center ">
+            <div className="flex-grow flex justify-center items-center w-[20%] lg:w-auto">
               <LocationsDropdown
                 label="From"
                 selectedLocation={fromLocation}
@@ -38,8 +60,8 @@ const HomePage = () => {
                 excludeLocations={[toLocation]}
               />
             </div>
-            <div className="h-6 w-0.5 bg-gray-400 mx-2"></div>
-            <div className="flex-grow flex justify-center items-center w-[20%]">
+            <div className="h-6 w-0.5 bg-gray-400 mx-2 max-sm:hidden"></div>
+            <div className="flex-grow flex justify-center items-center w-[20%] lg:w-auto">
               <LocationsDropdown
                 label="To"
                 selectedLocation={toLocation}
@@ -47,13 +69,24 @@ const HomePage = () => {
                 excludeLocations={[fromLocation]}
               />
             </div>
-            <div className="h-6 w-0.5 bg-gray-400 mx-2"></div>
-            <div className="flex-grow flex justify-center items-center w-[20%]">
-              <Datepicker theme={DatePickerTheme} />
+            <div className="h-6 w-0.5 bg-gray-400 mx-2 max-sm:hidden"></div>
+            <div className="flex-grow flex justify-center items-center w-[20%] lg:w-auto">
+              <DatePickerMUI
+                selectedDate={selectedDate}
+                onDateChange={handleDateChange}
+              />{" "}
+              {/* Pass selectedDate state and handleDateChange function as props */}
             </div>
-            <div className="h-6 w-0.5 bg-gray-400 mx-2"></div>
-            <div className="flex-grow flex justify-center items-center w-[20%]">
-              Search Button
+            <div className="h-6 w-0.5 bg-gray-400 mx-2 max-sm:hidden"></div>
+            <div className="flex-grow flex justify-center items-center w-[20%] lg:w-auto">
+              <Button
+                className="w-full"
+                color="amber"
+                size="lg"
+                onClick={handleSearch}
+              >
+                Search
+              </Button>
             </div>
           </div>
         </div>
