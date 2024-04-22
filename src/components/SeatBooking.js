@@ -2,12 +2,18 @@ import React, { useState, useCallback } from "react";
 import { useLocation } from "react-router-dom";
 import { v4 as uuidv4 } from "uuid";
 import axios from "axios";
+import { useCookies } from "react-cookie";
+import { useAuth0 } from "@auth0/auth0-react";
 
 const SeatBooking = () => {
   const location = useLocation();
   const busBooking = location.state.busBookings[0]; // Assuming there's only one booking for simplicity
   const [selectedSeats, setSelectedSeats] = useState([]);
   const [bookingId, setBookingId] = useState(uuidv4()); // Generate a unique booking ID
+  const [cookies, setCookie] = useCookies(["session_id"]);
+  const {user} = useAuth0();
+  const name = user.given_name + " " + user.family_name;
+  console.log(name);
 
   const handleSeatSelection = (seatNumber) => {
     setSelectedSeats((prevSelectedSeats) => {
@@ -29,6 +35,10 @@ const SeatBooking = () => {
         {
           seats: selectedSeats,
           bookingId: bookingId, // Pass booking ID
+          to_station: busBooking.to,
+          from_station: busBooking.from,
+          date: busBooking.date,
+          user_name: name,
         },
         {
           headers: {
@@ -37,6 +47,7 @@ const SeatBooking = () => {
         }
       );
       const session_id = response.data.id;
+      setCookie("session_id", session_id, { path: "/" });
       window.location.href = response.data.url;
     } catch (error) {
       console.error("Error booking seats:", error);
